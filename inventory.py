@@ -3,12 +3,12 @@ from tkinter import ttk, messagebox
 from supabase import create_client, Client
 import add_product
 
-# --- Supabase Setup ---
+#SUPABASE
 SUPABASE_URL = "https://qyeegnjmzfyyhecbjomm.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5ZWVnbmptemZ5eWhlY2Jqb21tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxOTcxNjEsImV4cCI6MjA2NDc3MzE2MX0.7s7bOszi1QX6X4mAFTOOenXYcFaus-7kAVhDmSAMirU"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# --- Tkinter Setup ---
+#Tkinter SEtup
 root = tk.Tk()
 root.title("BuiswAIz")
 root.geometry("1920x720")
@@ -37,7 +37,7 @@ def on_sidebar_click(name):
     else:
         print(f"{name} clicked — future implementation") 
 
-# Add sidebar buttons with actions
+#sidebar buttons
 for name in ["Dashboard", "Inventory", "Sales", "Expense", "Assistant"]:
     btn = sidebarButton(name, command=lambda n=name: on_sidebar_click(n))
     btn.pack(fill=tk.X)
@@ -58,10 +58,10 @@ tk.Entry(top, font=("Montserrat", 10), width=40, fg="#E0E0E0").pack(side=tk.RIGH
 title_label = tk.Label(main, text="Product List", bg="#FFFFFF", font=("Segoe UI", 14, "bold"), anchor='w')
 title_label.pack(fill=tk.X, padx=20)
 
-# Tree Columns
+# TABLE COLUMNS
 columns = ("productid", "description", "price", "cost", "currentstock", "reorderpoint", "age", "supplier")
 
-# Treeview Styling
+# TABLEVIEW Styling
 style = ttk.Style()
 style.configure("Treeview", font=("Segoe UI", 9), rowheight=40)
 style.configure("Treeview.Heading", font=("Segoe UI", 10, "bold"))
@@ -69,7 +69,7 @@ style.configure("Treeview.Heading", font=("Segoe UI", 10, "bold"))
 tree = ttk.Treeview(main, columns=columns, show="headings", height=12)
 tree.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
 
-# Treeview Headings
+# TABLEVIEW HEADING
 col_names = {
     "productid": "Code",
     "description": "Description",
@@ -85,7 +85,7 @@ for col in columns:
     tree.heading(col, text=col_names.get(col, col))
     tree.column(col, width=140, anchor="center")
 
-# --- Populate Data ---
+
 def populateData():
     try:
         products = supabase.table("products").select("*").execute().data
