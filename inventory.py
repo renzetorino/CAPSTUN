@@ -1,114 +1,253 @@
-import tkinter as tk
-from tkinter import ttk, messagebox
+from PyQt5 import QtWidgets, QtGui, QtCore
 from supabase import create_client, Client
-import add_product
 
-#SUPABASE
 SUPABASE_URL = "https://qyeegnjmzfyyhecbjomm.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5ZWVnbmptemZ5eWhlY2Jqb21tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxOTcxNjEsImV4cCI6MjA2NDc3MzE2MX0.7s7bOszi1QX6X4mAFTOOenXYcFaus-7kAVhDmSAMirU"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-#Tkinter SEtup
-root = tk.Tk()
-root.title("BuiswAIz")
-root.geometry("1920x720")
-root.configure(bg="#FFFFFF")
 
-# Header
-header = tk.Frame(root, bg="white")
-header.pack(fill=tk.X)
-tk.Label(header, text="BuisWaiz", bg="white", font=("Segoe UI", 20, "bold"), fg="#04B4FC").pack(side=tk.LEFT, padx=10, pady=15)
-divider = tk.Frame(root, bg="#CED4DA", height=1.5)
-divider.pack(fill=tk.X)
+class AddProductCard(QtWidgets.QFrame):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setObjectName("addProductCard")
+        self.setFixedSize(600, 700)
+        self.setGraphicsEffect(self.create_shadow())
 
-# Sidebar
-sidebar = tk.Frame(root, bg="#F4F5FC", width=250)
-sidebar.pack(side=tk.LEFT, fill=tk.Y)
+        self.move(
+            self.parent().width() // 2 - self.width() // 2,
+            self.parent().height()
+        )
 
-def sidebarButton(text, command=None):
-    return tk.Button(sidebar, text=text, anchor='w', bg="#F4F5FC", fg="#333", 
-                     font=("Montserrat", 10, "bold"), bd=0, padx=50, pady=10, 
-                     highlightthickness=0, activebackground="#E0E0E0", 
-                     command=command)
+        self.init_ui()
 
-def on_sidebar_click(name):
-    if name == "Inventory":
-        populateData()
-    else:
-        print(f"{name} clicked — future implementation") 
+        self.animation = QtCore.QPropertyAnimation(self, b"pos")
+        self.animation.setDuration(300)
+        self.end_pos = QtCore.QPoint(
+            self.parent().width() // 2 - self.width() // 2,
+            self.parent().height() // 2 - self.height() // 2
+        )
+        self.animation.setStartValue(self.pos())
+        self.animation.setEndValue(self.end_pos)
 
-#sidebar buttons
-for name in ["Dashboard", "Inventory", "Sales", "Expense", "Assistant"]:
-    btn = sidebarButton(name, command=lambda n=name: on_sidebar_click(n))
-    btn.pack(fill=tk.X)
+        self.back_button.clicked.connect(self.close_card)
 
-# Main Content
-main = tk.Frame(root, bg="white")
-main.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    def create_shadow(self):
+        shadow = QtWidgets.QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(30)
+        shadow.setOffset(0, 10)
+        shadow.setColor(QtGui.QColor(0, 0, 0, 60))
+        return shadow
 
-top = tk.Frame(main, bg="#F4F5FC")
-top.pack(fill=tk.X, padx=20, pady=30)
+    def init_ui(self):
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setSpacing(20)
 
-tk.Button(top, text="Add New Product", bg="#04B4FC", fg="white", font=("Montserrat", 10 ,"bold"),
-          padx=10, pady=5, command=add_product.open_add_product_window).pack(side=tk.RIGHT, padx=(10,0))
-tk.Label(top, text="Inventory", bg="#F4F5FC", font=("Montserrat", 15, "bold"), fg="#000000").pack(side=tk.LEFT, padx=10, pady=15)
-tk.Entry(top, font=("Montserrat", 10), width=40, fg="#E0E0E0").pack(side=tk.RIGHT)
+        header_layout = QtWidgets.QHBoxLayout()
+        self.back_button = QtWidgets.QPushButton("←")
+        self.back_button.setFixedWidth(40)
+        header_layout.addWidget(self.back_button)
+
+        title = QtWidgets.QLabel("Add Product")
+        title.setObjectName("cardTitle")
+        header_layout.addWidget(title)
+        header_layout.addStretch()
+        layout.addLayout(header_layout)
+
+        form_layout = QtWidgets.QFormLayout()
+        form_layout.setLabelAlignment(QtCore.Qt.AlignLeft)
+
+        self.entries = {}
+        self.supplier_map = {}
+
+        fields = {
+            "productname": "Product Name",
+            "description": "Description",
+            "price": "Price",
+            "cost": "Cost",
+            "currentstock": "Current Stock",
+            "reorderpoint": "Reorder Point",
+            "age": "Age (months)",
+            "supplier": "Supplier"
+        }
+
+        for key, label in fields.items():
+            if key == "supplier":
+                combo = QtWidgets.QComboBox()
+                try:
+                    response = supabase.table("suppliers").select("supplierid,suppliername").execute()
+                    for supplier in response.data or []:
+                        combo.addItem(supplier["suppliername"])
+                        self.supplier_map[supplier["suppliername"]] = supplier["supplierid"]
+                except Exception as e:
+                    QtWidgets.QMessageBox.critical(self, "Error", f"Failed to load suppliers:\n{e}")
+                self.entries[key] = {"entry": combo}
+                form_layout.addRow(label, combo)
+            else:
+                line = QtWidgets.QLineEdit()
+                self.entries[key] = line
+                form_layout.addRow(label, line)
+
+        layout.addLayout(form_layout)
+
+        save_btn = QtWidgets.QPushButton("Save Product")
+        save_btn.setObjectName("saveProductButton")
+        save_btn.clicked.connect(self.save_product)
+        layout.addWidget(save_btn)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.animation.start()
+
+    def close_card(self):
+        self.hide()
+
+    def save_product(self):
+        try:
+            data = {}
+            for key, entry in self.entries.items():
+                if key == "supplier":
+                    selected = entry["entry"].currentText()
+                    if not selected:
+                        QtWidgets.QMessageBox.warning(self, "Missing", "Please select a supplier.")
+                        return
+                    data["supplierid"] = self.supplier_map[selected]
+                else:
+                    data[key] = entry.text().strip()
+
+            for field in ["price", "cost"]:
+                data[field] = float(data.get(field, 0.0))
+
+            for field in ["currentstock", "reorderpoint", "age"]:
+                data[field] = int(data.get(field, 0))
+
+            response = supabase.table("products").insert(data).execute()
+            if response.data:
+                QtWidgets.QMessageBox.information(self, "Success", "Product saved successfully.")
+                self.hide()
+            else:
+                QtWidgets.QMessageBox.critical(self, "Error", "Insert failed.")
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(self, "Error", str(e))
+
+    
+class MainWindow(QtWidgets.QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("BuiswAIz")
+        self.setGeometry(100, 100, 1280, 720)
+
+        try:
+            with open("style.qss", "r") as f:
+                self.setStyleSheet(f.read())
+        except FileNotFoundError:
+            print("style.qss not found")
+
+        central_widget = QtWidgets.QWidget()
+        self.setCentralWidget(central_widget)
+
+        main_layout = QtWidgets.QHBoxLayout(central_widget)
+        main_layout.addLayout(self.create_sidebar(), 1)
+
+        self.main_content = self.create_main_content()
+        main_layout.addLayout(self.main_content, 4)
+
+        self.populate_data()
+
+    def create_sidebar(self):
+        layout = QtWidgets.QVBoxLayout()
+        buttons = ["Dashboard", "Inventory", "Sales", "Expense", "Assistant"]
+        for name in buttons:
+            btn = QtWidgets.QPushButton(name)
+            btn.setObjectName("sidebarButton")
+            btn.setCheckable(True)
+            btn.setAutoExclusive(True)
+            if name == "Inventory":
+                btn.setChecked(True)
+            btn.clicked.connect(lambda _, n=name: self.on_sidebar_click(n))
+            layout.addWidget(btn)
+        layout.addStretch()
+        return layout
+
+    def create_main_content(self):
+        layout = QtWidgets.QVBoxLayout()
+
+        top_bar = QtWidgets.QHBoxLayout()
+        label = QtWidgets.QLabel("Inventory")
+        label.setFont(QtGui.QFont("Montserrat", 15, QtGui.QFont.Bold))
+        top_bar.addWidget(label)
+
+        top_bar.addStretch()
+
+        self.search_input = QtWidgets.QLineEdit()
+        self.search_input.setPlaceholderText("Search")
+        self.search_input.setFixedWidth(300)
+        self.search_input.setObjectName("searchInput")
+        top_bar.addWidget(self.search_input)
+
+        add_btn = QtWidgets.QPushButton("Add New Product")
+        add_btn.setObjectName("addProductButton")
+        add_btn.clicked.connect(self.open_add_product_window)
+        top_bar.addWidget(add_btn)
+        layout.addLayout(top_bar)
+
+        self.table = QtWidgets.QTableWidget()
+        self.table.setColumnCount(10)
+        self.table.setHorizontalHeaderLabels([
+            "Code", "ProductName", "Description", "Price", "Cost", "Quantity",
+            "Reorder", "Age", "Supplier", "CreatedAt"
+        ])
+        self.table.horizontalHeader().setStretchLastSection(True)
+        self.table.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        layout.addWidget(self.table)
+
+        return layout
+
+    def on_sidebar_click(self, name):
+        if name == "Inventory":
+            self.populate_data()
+        else:
+            QtWidgets.QMessageBox.information(self, "Info", f"{name} clicked — feature coming soon!")
+
+    def populate_data(self):
+        self.table.setRowCount(0)
+        try:
+            products = supabase.table("products").select("*").execute().data
+            suppliers = supabase.table("suppliers").select("supplierid,suppliername").execute().data
+            supplier_map = {s["supplierid"]: s["suppliername"] for s in suppliers}
+
+            for row in products:
+                current_row = self.table.rowCount()
+                self.table.insertRow(current_row)
+                values = [
+                    row.get("productid", ""),
+                    row.get("productname", ""),
+                    row.get("description", ""),
+                    f"₱{row.get('price', 0):,.2f}",
+                    f"₱{row.get('cost', 0):,.2f}",
+                    str(row.get("currentstock", "")),
+                    str(row.get("reorderpoint", "")),
+                    f"{row.get('age', '')} mo",
+                    supplier_map.get(row.get("supplierid"), row.get("supplierid")),
+                    str(row.get("createdat", ""))
+                ]
+                for col, val in enumerate(values):
+                    item = QtWidgets.QTableWidgetItem(val)
+                    item.setTextAlignment(QtCore.Qt.AlignCenter)
+                    self.table.setItem(current_row, col, item)
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(self, "Error", str(e))
+
+    def open_add_product_window(self):
+        self.card = AddProductCard(self)
+        self.card.show()
 
 
-title_label = tk.Label(main, text="Product List", bg="#FFFFFF", font=("Segoe UI", 14, "bold"), anchor='w')
-title_label.pack(fill=tk.X, padx=20)
-
-# TABLE COLUMNS
-columns = ("productid", "description", "price", "cost", "currentstock", "reorderpoint", "age", "supplier")
-
-# TABLEVIEW Styling
-style = ttk.Style()
-style.configure("Treeview", font=("Segoe UI", 9), rowheight=40)
-style.configure("Treeview.Heading", font=("Segoe UI", 10, "bold"))
-
-tree = ttk.Treeview(main, columns=columns, show="headings", height=12)
-tree.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
-
-# TABLEVIEW HEADING
-col_names = {
-    "productid": "Code",
-    "description": "Description",
-    "price": "Price",
-    "cost": "Cost",
-    "currentstock": "Quantity",
-    "reorderpoint": "Reorder",
-    "age": "Age",
-    "supplier": "Supplier",
-}
-
-for col in columns:
-    tree.heading(col, text=col_names.get(col, col))
-    tree.column(col, width=140, anchor="center")
-
-
-def populateData():
-    try:
-        products = supabase.table("products").select("*").execute().data
-        suppliers = supabase.table("suppliers").select("supplierid,suppliername").execute().data
-        supplier_map = {s["supplierid"]: s["suppliername"] for s in suppliers}
-
-        for row in products:
-            values = (
-                row.get("productid", ""),
-                row.get("description", ""),
-                f"₱{row.get('price', 0):,.2f}",
-                f"₱{row.get('cost', 0):,.2f}",
-                row.get("currentstock", ""),
-                row.get("reorderpoint", ""),
-                f"{row.get('age', '')} months",
-                supplier_map.get(row.get("supplierid"), row.get("supplierid")),
-            )
-            tree.insert("", "end", values=values)
-
-    except Exception as e:
-        print("Data load error:", e)
-        messagebox.showerror("Error", f"Could not load data:\n{e}")
-
-populateData()
-
-root.mainloop()
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec_())

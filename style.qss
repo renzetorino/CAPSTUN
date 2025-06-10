@@ -1,0 +1,142 @@
+/* Main Window */
+QMainWindow {
+    background-color: #F9FAFC;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 13px;
+    color: #333;
+}
+
+/* Sidebar Buttons */
+QPushButton#sidebarButton {
+    text-align: left;
+    padding: 10px 20px;
+    font-weight: bold;
+    background-color: transparent;
+    border: none;
+    color: #333;
+    border-radius: 8px;
+}
+QPushButton#sidebarButton:hover {
+    background-color: #E4E9F7;
+}
+QPushButton#sidebarButton:checked {
+    background-color: #04B4FC;
+    color: white;
+}
+
+/* Add Product Button */
+QPushButton#addProductButton {
+    background-color: #04B4FC;
+    color: white;
+    font-weight: bold;
+    padding: 6px 18px;
+    border-radius: 6px;
+}
+
+/* Search Input */
+QLineEdit#searchInput {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: white;
+}
+
+/* Table Header */
+QHeaderView::section {
+    background-color: #F1F4F9;
+    padding: 8px;
+    border: none;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Table */
+QTableWidget {
+    background-color: transparent;
+    border: none;
+    gridline-color: #E8E8E8;
+    selection-background-color: #E3F2FD;
+    selection-color: #000;
+}
+
+QTableWidget::item {
+    background-color: white;
+    border: none;
+    padding: 6px;
+    margin: 4px;
+}
+
+QTableWidget::item:selected {
+    background-color: #E3F2FD;
+}
+
+/* Scrollbar */
+QScrollBar:vertical {
+    border: none;
+    background: #F1F4F9;
+    width: 10px;
+    margin: 0px 0px 0px 0px;
+    border-radius: 5px;
+}
+QScrollBar::handle:vertical {
+    background: #A6B1C1;
+    border-radius: 5px;
+}
+
+
+/* AddProductCard Styling */
+QFrame#addProductCard {
+    background-color: white;
+    border-radius: 20px;
+    padding: 30px;
+    border: 1px solid #ddd;
+}
+
+/* Drop shadow is applied in Python using QGraphicsDropShadowEffect */
+
+/* Title */
+QLabel#cardTitle {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Inputs */
+QLineEdit {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+}
+QLineEdit:focus {
+    border: 1px solid #04B4FC;
+}
+
+/* Combobox */
+QComboBox {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
+}
+QComboBox:focus {
+    border: 1px solid #04B4FC;
+}
+
+/* Save Button */
+QPushButton#saveProductButton {
+    background-color: #04B4FC;
+    color: white;
+    font-weight: bold;
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-size: 15px;
+}
+QPushButton#saveProductButton:hover {
+    background-color: #029ee0;
+}
+
+/* Back Button */
+QPushButton {
+    font-size: 16px;
+}
